@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DepartmentResource\Pages;
 use App\Filament\Resources\DepartmentResource\RelationManagers;
+use App\Filament\Resources\DepartmentResource\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\DepartmentResource\RelationManagers\UsersRelationManager;
 use App\Models\Department;
 use App\Models\User;
@@ -84,6 +85,7 @@ class DepartmentResource extends Resource
     {
         return [
             UsersRelationManager::class,
+            DocumentsRelationManager::class,
         ];
     }
 
