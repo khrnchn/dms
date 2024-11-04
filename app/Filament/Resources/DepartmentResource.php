@@ -63,9 +63,11 @@ class DepartmentResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->sortable()
                     ->searchable()
                     ->description(fn(Department $record): string => $record->description),
                 TextColumn::make('fileAdmin.name')
+                    ->sortable()
                     ->searchable(),
             ])
             ->filters([
