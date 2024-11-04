@@ -121,8 +121,8 @@ class UserResource extends Resource
                     ->indicator('Departments'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
             ])
             ->headerActions([
                 ExportAction::make()

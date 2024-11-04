@@ -3,12 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DepartmentResource\Pages;
-use App\Filament\Resources\DepartmentResource\RelationManagers;
 use App\Filament\Resources\DepartmentResource\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\DepartmentResource\RelationManagers\UsersRelationManager;
 use App\Models\Department;
 use App\Models\User;
-use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -18,8 +16,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Components\Section as InfolistSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class DepartmentResource extends Resource
 {
@@ -74,12 +73,83 @@ class DepartmentResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfolistSection::make()
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Department Name')
+                            ->icon('heroicon-m-building-office'),
+                            // ->weight('bold'),
+
+                        TextEntry::make('created_at')
+                            ->label('Created')
+                            ->dateTime()
+                            ->icon('heroicon-m-calendar'),
+
+                        TextEntry::make('description')
+                            ->label('Description')
+                            ->icon('heroicon-m-information-circle')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('fileAdmin.name')
+                            ->label('File Administrator')
+                            ->icon('heroicon-m-user-circle')
+                            ->badge()
+                            ->color('success'),
+
+                        TextEntry::make('users_count')
+                            ->label('Total Members')
+                            ->state(fn(Department $record): int => $record->users()->count())
+                            ->icon('heroicon-m-users')
+                            ->color('info'),
+
+                        TextEntry::make('documents_count')
+                            ->label('Total Documents')
+                            ->state(fn(Department $record): int => $record->documents()->count())
+                            ->icon('heroicon-m-document')
+                            ->color('warning'),
+                    ])
+                    ->columns([
+                        'default' => 2,
+                        'sm' => 2,
+                        'lg' => 3
+                    ]),
+
+                InfolistSection::make('Recent Activity')
+                    ->schema([
+                        TextEntry::make('latest_documents')
+                            ->label('Latest Documents')
+                            ->state(function (Department $record): string {
+                                $latestDocs = $record->documents()
+                                    ->latest()
+                                    ->take(3)
+                                    ->pluck('title')
+                                    ->join(', ');
+
+                                return $latestDocs ?: 'No documents yet';
+                            })
+                            ->icon('heroicon-m-document-text')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('updated_at')
+                            ->label('Last Updated')
+                            ->since()
+                            ->icon('heroicon-m-clock'),
+                    ])
+                    ->collapsed(),
             ]);
     }
 
