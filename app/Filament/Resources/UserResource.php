@@ -5,24 +5,21 @@ namespace App\Filament\Resources;
 use App\Enums\Role;
 use App\Filament\Exports\UserExporter;
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
-use Filament\Forms;
 use Filament\Forms\Components\Section;
+use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportAction;
-use Filament\Tables\Actions\ExportBulkAction;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
@@ -125,6 +122,7 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
             ->headerActions([
                 ExportAction::make()
@@ -138,6 +136,54 @@ class UserResource extends Resource
                     // ExportBulkAction::make()
                     //     ->exporter(UserExporter::class)
                 ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfolistSection::make()
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Full Name')
+                            ->icon('heroicon-m-user'),
+
+                        TextEntry::make('email')
+                            ->label('Email Address')
+                            ->icon('heroicon-m-envelope')
+                            ->copyable(),
+
+                        TextEntry::make('role')
+                            ->badge()
+                            ->formatStateUsing(fn(Role $state): string => $state->label())
+                            ->color(fn(Role $state): string => match ($state) {
+                                Role::SYSTEM_ADMIN => 'gray',
+                                Role::FILE_ADMIN => 'warning',
+                                Role::MANAGER => 'success',
+                                Role::STAFF => 'danger',
+                            }),
+
+                        TextEntry::make('department.name')
+                            ->label('Department')
+                            ->icon('heroicon-m-building-office'),
+                    ])
+                    ->columns(2),
+
+                InfolistSection::make('Additional Details')
+                    ->schema([
+                        TextEntry::make('created_at')
+                            ->label('Joined')
+                            ->dateTime()
+                            ->icon('heroicon-m-calendar'),
+
+                        TextEntry::make('documents_count')
+                            ->label('Documents Uploaded')
+                            ->state(fn(User $record): int => $record->documents()->count())
+                            ->icon('heroicon-m-document')
+                            ->color('success'),
+                    ])
+                    ->columns(2),
             ]);
     }
 
