@@ -268,7 +268,8 @@ class DocumentResource extends Resource
                     ->icon('heroicon-o-arrow-down-tray')
                     ->label('Download')
                     ->color('info')
-                    ->url(fn($record) => Storage::disk('public')->url($record->file_path))
+                    // ->url(fn($record) => Storage::disk('public')->url($record->file_path))
+                    ->url(fn($record) => Storage::url($record->file_path)) // Use Storage::url() instead of Storage::disk('public')->url()
                     ->openUrlInNewTab()
                     ->visible(fn($record) => Storage::disk('public')->exists($record->file_path)),
             ])
