@@ -8,6 +8,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -40,38 +41,41 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')
-                    ->required()
-                    ->placeholder('Enter name')
-                    ->maxLength(70),
+                Section::make()
+                    ->schema([
+                        TextInput::make('name')
+                            ->columnSpan(2)
+                            ->required()
+                            ->placeholder('Enter name')
+                            ->maxLength(70),
 
-                TextInput::make('email')
-                    ->email()
-                    ->placeholder('Enter email')
-                    ->required(),
+                        TextInput::make('email')
+                            ->email()
+                            ->placeholder('Enter email')
+                            ->required(),
 
-                Select::make('role')
-                    ->options(Role::options())
-                    ->placeholder('Select role')
-                    ->default(Role::STAFF->value)
-                    ->required()
-                    ->native(false)
-                    ->preload()
-                    ->searchable(),
+                        TextInput::make('password')
+                            ->password()
+                            ->placeholder('Enter password')
+                            ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                            ->dehydrated(fn($state) => filled($state))
+                            ->required(fn(string $context): bool => $context === 'create'),
 
-                Select::make('department_id')
-                    ->relationship('department', 'name')
-                    ->placeholder('Select department')
-                    ->searchable()
-                    ->preload()
-                    ->required(fn(Get $get): bool => $get('role') !== Role::SYSTEM_ADMIN->value),
+                        Select::make('role')
+                            ->options(Role::options())
+                            ->placeholder('Select role')
+                            ->default(Role::STAFF->value)
+                            ->required()
+                            ->preload()
+                            ->searchable(),
 
-                TextInput::make('password')
-                    ->password()
-                    ->placeholder('Enter password')
-                    ->dehydrateStateUsing(fn($state) => Hash::make($state))
-                    ->dehydrated(fn($state) => filled($state))
-                    ->required(fn(string $context): bool => $context === 'create'),
+                        Select::make('department_id')
+                            ->relationship('department', 'name')
+                            ->placeholder('Select department')
+                            ->searchable()
+                            ->preload()
+                            ->required(fn(Get $get): bool => $get('role') !== Role::SYSTEM_ADMIN->value),
+                    ])->columns(3)
             ]);
     }
 

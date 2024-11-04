@@ -8,6 +8,7 @@ use App\Filament\Resources\DepartmentResource\RelationManagers\UsersRelationMana
 use App\Models\Department;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,13 +37,24 @@ class DepartmentResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')->required()->placeholder('Enter department name'),
-                Textarea::make('description')->placeholder('Enter department description'),
-                Select::make('file_admin_id')
-                    ->label('File Admin')
-                    ->options(User::all()->pluck('name', 'id'))
-                    ->placeholder('Select file admin')
-            ])->columns(1);
+                Section::make()
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->columnSpan(1)
+                            ->placeholder('Enter department name'),
+
+                        Select::make('file_admin_id')
+                            ->label('File Admin')
+                            ->columnSpan(1)
+                            ->options(User::all()->pluck('name', 'id'))
+                            ->placeholder('Select file admin'),
+
+                        Textarea::make('description')
+                            ->columnSpanFull()
+                            ->placeholder('Enter department description'),
+                    ])->columns(2)
+            ]);
     }
 
     public static function table(Table $table): Table
