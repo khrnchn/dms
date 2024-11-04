@@ -1,5 +1,7 @@
 # document management system
 
+![Landing Image](public/landing.jpg)
+
 ## table of contents
 
 - [about](#about)
