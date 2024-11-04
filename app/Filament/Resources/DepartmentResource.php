@@ -52,6 +52,7 @@ class DepartmentResource extends Resource
 
                         Textarea::make('description')
                             ->columnSpanFull()
+                            ->rows(4)
                             ->placeholder('Enter department description'),
                     ])->columns(2)
             ]);
@@ -64,6 +65,7 @@ class DepartmentResource extends Resource
                 TextColumn::make('name')
                     ->sortable()
                     ->searchable()
+                    ->wrap()
                     ->description(fn(Department $record): string => $record->description),
                 TextColumn::make('fileAdmin.name')
                     ->sortable()
@@ -92,7 +94,7 @@ class DepartmentResource extends Resource
                         TextEntry::make('name')
                             ->label('Department Name')
                             ->icon('heroicon-m-building-office'),
-                            // ->weight('bold'),
+                        // ->weight('bold'),
 
                         TextEntry::make('created_at')
                             ->label('Created')
