@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DepartmentResource\RelationManagers;
 
+use App\Enums\Role;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -29,7 +30,19 @@ class UsersRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make(
+                    'name'
+                ),
+                Tables\Columns\TextColumn::make('email'),
+                Tables\Columns\TextColumn::make('role')
+                    ->badge()
+                    ->formatStateUsing(fn(Role $state): string => $state->label())
+                    ->color(fn(Role $state): string => match ($state) {
+                        Role::SYSTEM_ADMIN => 'gray',
+                        Role::FILE_ADMIN => 'warning',
+                        Role::MANAGER => 'success',
+                        Role::STAFF => 'danger',
+                    }),
             ])
             ->filters([
                 //
