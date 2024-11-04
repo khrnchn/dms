@@ -19,6 +19,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Section;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -28,6 +29,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
+use Illuminate\Database\Eloquent\Collection;
 
 class DocumentResource extends Resource
 {
@@ -273,6 +275,45 @@ class DocumentResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('archive')
+                        ->label('Archive Selected')
+                        // ->icon('heroicon-o-archive-box')
+                        ->action(function (Collection $records): void {
+                            $records->each(function ($record) {
+                                $record->update([
+                                    'is_archived' => true,
+                                    'archived_at' => now(),
+                                ]);
+                            });
+
+                            Notification::make()
+                                ->title('Success')
+                                ->success()
+                                ->body('All selected records have been archived.')
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->requiresConfirmation(),
+
+                    Tables\Actions\BulkAction::make('unarchive')
+                        ->label('Unarchive Selected')
+                        // ->icon('heroicon-o-archive-box-arrow-up')
+                        ->action(function (Collection $records): void {
+                            $records->each(function ($record) {
+                                $record->update([
+                                    'is_archived' => false,
+                                    'archived_at' => null,
+                                ]);
+                            });
+
+                            Notification::make()
+                                ->title('Success')
+                                ->success()
+                                ->body('All selected records have been unarchived.')
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->requiresConfirmation(),
                 ]),
             ]);
     }
