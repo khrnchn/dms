@@ -26,7 +26,7 @@ enum Role: string
             self::SYSTEM_ADMIN => 'System Administrator',
             self::MANAGER => 'Manager',
             self::FILE_ADMIN => 'File Administrator',
-            self::STAFF => 'Staff Member',
+            self::STAFF => 'Staff',
         };
     }
 

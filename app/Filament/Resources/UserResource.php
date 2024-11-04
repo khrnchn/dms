@@ -32,7 +32,7 @@ class UserResource extends Resource
     {
         return static::getModel()::count();
     }
-    
+
     public static function form(Form $form): Form
     {
         return $form
@@ -86,12 +86,13 @@ class UserResource extends Resource
 
                 TextColumn::make('role')
                     ->badge()
-                    ->colors([
-                        'danger' => Role::SYSTEM_ADMIN->value,
-                        'warning' => Role::FILE_ADMIN->value,
-                        'success' => Role::MANAGER->value,
-                        'secondary' => Role::STAFF->value,
-                    ]),
+                    ->formatStateUsing(fn(Role $state): string => $state->label())
+                    ->color(fn(Role $state): string => match ($state) {
+                        Role::SYSTEM_ADMIN => 'gray',
+                        Role::FILE_ADMIN => 'warning',
+                        Role::MANAGER => 'success',
+                        Role::STAFF => 'danger',
+                    }),
 
                 TextColumn::make('department.name')
                     ->searchable()
