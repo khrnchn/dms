@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile(isSimple: false)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Indigo,
             ])
             ->databaseNotifications()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
