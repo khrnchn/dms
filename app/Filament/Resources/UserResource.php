@@ -19,6 +19,7 @@ use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -107,7 +108,20 @@ class UserResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('role')
+                    ->options(Role::class)
+                    ->multiple()
+                    ->preload()
+                    ->label('Filter by Role')
+                    ->indicator('Roles'),
+
+                SelectFilter::make('department')
+                    ->relationship('department', 'name')
+                    ->preload()
+                    ->searchable()
+                    ->multiple()
+                    ->label('Filter by Department')
+                    ->indicator('Departments'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
