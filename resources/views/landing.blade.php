@@ -28,7 +28,7 @@
         <!-- Hero Section -->
         <section class="py-20 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
             <div class="container mx-auto px-6 text-center">
-                <h1 class="text-5xl font-bold mb-6">Transform Your Document Management</h1>
+                <h1 class="text-5xl font-bold mb-6">Transform Your Document Management test</h1>
                 <p class="text-xl mb-8 max-w-2xl mx-auto">
                     Streamline your organization's document handling with automated storage,
                     enhanced security, and efficient collaboration tools.
