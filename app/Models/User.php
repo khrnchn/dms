@@ -25,6 +25,9 @@ class User extends Authenticatable
         'password',
         'role',
         'department_id',
+        'phone',
+        'address',
+        'nric',
     ];
 
     /**
@@ -59,5 +62,10 @@ class User extends Authenticatable
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function isAdmin()
+    {
+        return $this->role === Role::SYSTEM_ADMIN->value;
     }
 }
