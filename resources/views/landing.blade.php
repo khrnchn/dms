@@ -18,9 +18,15 @@
                 <a href="#benefits" class="text-gray-600 hover:text-gray-800">Benefits</a>
                 <a href="#modules" class="text-gray-600 hover:text-gray-800">Modules</a>
             </div>
+            @if(auth()->check())
+            <a href="/app" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+                Dashboard
+            </a>
+            @else
             <a href="/app/login" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
                 Login
             </a>
+            @endif
         </nav>
     </header>
 
