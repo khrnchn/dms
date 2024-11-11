@@ -82,9 +82,9 @@ class DocumentResource extends Resource
                                 'approved' => 'Approved',
                                 'rejected' => 'Rejected',
                             ])
+                            ->disabled()
                             ->native(false)
-                            ->default('pending')
-                            ->required(),
+                            ->default('pending'),
 
                         FileUpload::make('file_path')
                             ->required()
@@ -189,15 +189,18 @@ class DocumentResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('department.name')
+                    ->toggleable()
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('file_type')
+                    ->toggleable()
                     ->badge()
                     ->formatStateUsing(fn(string $state): string => strtoupper($state))
                     ->colors(['primary']),
 
                 TextColumn::make('file_size')
+                    ->toggleable()
                     ->formatStateUsing(
                         fn($state) =>
                         number_format($state / 1024 / 1024, 2) . ' MB'
@@ -210,7 +213,7 @@ class DocumentResource extends Resource
 
                 TextColumn::make('created_at')
                     ->label('Upload date')
-                    ->dateTime('d/m/Y H:i')
+                    ->dateTime('d F Y')
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
@@ -267,7 +270,7 @@ class DocumentResource extends Resource
                 Action::make('download')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->label('Download')
-                    ->color('info')
+                    ->color('warning')
                     // ->url(fn($record) => Storage::disk('public')->url($record->file_path))
                     ->url(fn($record) => Storage::url($record->file_path)) // Use Storage::url() instead of Storage::disk('public')->url()
                     ->openUrlInNewTab()
