@@ -18,8 +18,8 @@
                 <a href="#benefits" class="text-gray-600 hover:text-gray-800">Benefits</a>
                 <a href="#modules" class="text-gray-600 hover:text-gray-800">Modules</a>
             </div>
-            <a href="/login" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
-                Get Started
+            <a href="/app/login" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+                Login
             </a>
         </nav>
     </header>
@@ -33,7 +33,7 @@
                     Streamline your organization's document handling with automated storage,
                     enhanced security, and efficient collaboration tools.
                 </p>
-                <a href="/login" class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition duration-300 inline-flex items-center">
+                <a href="/app/login" class="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition duration-300 inline-flex items-center">
                     Start Digital Transformation
                 </a>
             </div>
