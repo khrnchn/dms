@@ -35,6 +35,17 @@ class UserResource extends Resource
         return static::getModel()::count();
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+
+        if ($user->role === Role::MANAGER || $user->role === Role::SYSTEM_ADMIN) {
+            return true;
+        }
+
+        return false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form
