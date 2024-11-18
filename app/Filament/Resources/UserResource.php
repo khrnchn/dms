@@ -39,7 +39,7 @@ class UserResource extends Resource
     {
         $user = auth()->user();
 
-        if ($user->role === Role::MANAGER || $user->role === Role::SYSTEM_ADMIN) {
+        if ($user->role === Role::SYSTEM_ADMIN) {
             return true;
         }
 
@@ -71,7 +71,9 @@ class UserResource extends Resource
                             ->required(fn(string $context): bool => $context === 'create'),
 
                         Select::make('role')
-                            ->options(Role::options())
+                            ->options(array_filter(Role::options(), function ($key) {
+                                return $key !== Role::SYSTEM_ADMIN->value;
+                            }, ARRAY_FILTER_USE_KEY))
                             ->placeholder('Select role')
                             ->default(Role::STAFF->value)
                             ->required()
