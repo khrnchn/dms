@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Illuminate\Database\Eloquent\Builder;
 
 class DepartmentResource extends Resource
 {
@@ -43,6 +44,20 @@ class DepartmentResource extends Resource
         }
 
         return false;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        // if not sysadmin, show only the user's department
+        if ($user->role !== Role::SYSTEM_ADMIN) {
+            return parent::getEloquentQuery()
+                ->where('id', $user->department_id);
+        }
+
+        // show all
+        return parent::getEloquentQuery();
     }
 
     public static function form(Form $form): Form
