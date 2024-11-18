@@ -65,13 +65,13 @@ class DocumentResource extends Resource
                             ->columnSpanFull()
                             ->placeholder('Enter document description'),
 
-                        Select::make('status')
+                            Select::make('status')
                             ->options([
                                 'pending' => 'Pending',
                                 'approved' => 'Approved',
                                 'rejected' => 'Rejected',
                             ])
-                            ->disabled()
+                            ->disabled(fn() => !auth()->user()->role->isManager())
                             ->native(false)
                             ->default('pending'),
 
