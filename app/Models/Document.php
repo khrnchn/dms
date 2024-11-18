@@ -20,6 +20,17 @@ class Document extends Model
         'archived_at'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (!$model->department_id) {
+                $model->department_id = auth()->user()->department_id;
+            }
+        });
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);
