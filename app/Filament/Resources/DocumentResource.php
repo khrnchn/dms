@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\Role;
 use App\Filament\Resources\DocumentResource\Pages;
 use App\Models\Document;
-use Filament\Forms\Components\Builder;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
@@ -17,18 +16,14 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Section;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Illuminate\Database\Eloquent\Collection;
 
 class DocumentResource extends Resource
@@ -69,12 +64,6 @@ class DocumentResource extends Resource
                             ->rows(3)
                             ->columnSpanFull()
                             ->placeholder('Enter document description'),
-
-                        Select::make('department_id')
-                            ->relationship('department', 'name')
-                            ->required()
-                            ->searchable()
-                            ->preload(),
 
                         Select::make('status')
                             ->options([
@@ -160,7 +149,6 @@ class DocumentResource extends Resource
                     ->columns(3)
             ]);
     }
-
     public static function table(Table $table): Table
     {
         return $table
@@ -320,6 +308,30 @@ class DocumentResource extends Resource
                         ->requiresConfirmation(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        // If manager, show all docs for their department
+        if ($user->role === Role::MANAGER) {
+            return parent::getEloquentQuery()
+                ->where('department_id', $user->department_id);
+        }
+
+        // For file admin or staff, show only approved docs or their own uploads
+        if ($user->role === Role::FILE_ADMIN || $user->role === Role::STAFF) {
+            return parent::getEloquentQuery()
+                ->where('department_id', $user->department_id)
+                ->where(function ($query) use ($user) {
+                    $query->where('status', 'approved')
+                        ->orWhere('uploaded_by', $user->id);
+                });
+        }
+
+        // Default case for other roles
+        return parent::getEloquentQuery();
     }
 
     public static function getRelations(): array
