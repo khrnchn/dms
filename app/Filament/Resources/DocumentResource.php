@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\Role;
 use App\Filament\Resources\DocumentResource\Pages;
+use App\Models\AccessRequest;
 use App\Models\Document;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -65,7 +66,7 @@ class DocumentResource extends Resource
                             ->columnSpanFull()
                             ->placeholder('Enter document description'),
 
-                            Select::make('status')
+                        Select::make('status')
                             ->options([
                                 'pending' => 'Pending',
                                 'approved' => 'Approved',
@@ -246,23 +247,57 @@ class DocumentResource extends Resource
                 //     ->toggle(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Action::make('request_access')
+                    ->icon('heroicon-o-hand-raised')
+                    ->label('Request Access')
+                    ->color('warning')
+                    ->visible(
+                        fn($record) =>
+                        $record->status === 'approved' &&
+                            $record->department_id !== auth()->user()->department_id &&
+                            !AccessRequest::where('document_id', $record->id)
+                                ->where('user_id', auth()->id())
+                                ->whereIn('status', ['pending', 'approved'])
+                                ->exists()
+                    )
+                    ->action(function ($record) {
+                        AccessRequest::create([
+                            'document_id' => $record->id,
+                            'user_id' => auth()->id(),
+                            'status' => 'pending',
+                            'requested_at' => now(),
+                            'reason' => 'Access request',
+                            'expiry_date' => now()->addDays(30)
+                        ]);
 
-                // Action::make('preview')
-                //     ->icon('heroicon-o-eye')
-                //     ->label('Preview')
-                //     ->color('info')
-                //     ->url(fn($record) => Storage::disk('public')->url($record->file_path))
-                //     ->openUrlInNewTab(),
+                        Notification::make()
+                            ->title('Access Request Submitted')
+                            ->body('Your request for document access has been sent.')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\EditAction::make()
+                    ->visible(
+                        fn($record) =>
+                        $record->department_id === auth()->user()->department_id &&
+                            $record->status !== 'pending'
+                    ),
 
                 Action::make('download')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->label('Download')
                     ->color('warning')
-                    // ->url(fn($record) => Storage::disk('public')->url($record->file_path))
-                    ->url(fn($record) => Storage::url($record->file_path)) // Use Storage::url() instead of Storage::disk('public')->url()
+                    ->url(fn($record) => Storage::url($record->file_path))
                     ->openUrlInNewTab()
-                    ->visible(fn($record) => Storage::disk('public')->exists($record->file_path)),
+                    ->visible(
+                        fn($record) => ($record->department_id === auth()->user()->department_id && $record->status !== 'pending') ||
+                            AccessRequest::where('document_id', $record->id)
+                            ->where('user_id', auth()->id())
+                            ->where('status', 'approved')
+                            ->exists() &&
+                            Storage::disk('public')->exists($record->file_path)
+                    ),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -308,30 +343,6 @@ class DocumentResource extends Resource
                         ->requiresConfirmation(),
                 ]),
             ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        $user = auth()->user();
-
-        // If manager, show all docs for their department
-        if ($user->role === Role::MANAGER) {
-            return parent::getEloquentQuery()
-                ->where('department_id', $user->department_id);
-        }
-
-        // For file admin or staff, show only approved docs or their own uploads
-        if ($user->role === Role::FILE_ADMIN || $user->role === Role::STAFF) {
-            return parent::getEloquentQuery()
-                ->where('department_id', $user->department_id)
-                ->where(function ($query) use ($user) {
-                    $query->where('status', 'approved')
-                        ->orWhere('uploaded_by', $user->id);
-                });
-        }
-
-        // Default case for other roles
-        return parent::getEloquentQuery();
     }
 
     public static function getRelations(): array
