@@ -259,6 +259,8 @@ class DocumentResource extends Resource
                                 ->where('user_id', auth()->id())
                                 ->whereIn('status', ['pending', 'approved'])
                                 ->exists()
+
+                        // add additional condition to check if user is manager
                     )
                     ->action(function ($record) {
                         AccessRequest::create([
@@ -266,7 +268,6 @@ class DocumentResource extends Resource
                             'user_id' => auth()->id(),
                             'status' => 'pending',
                             'requested_at' => now(),
-                            'reason' => 'Access request',
                             'expiry_date' => now()->addDays(30)
                         ]);
 

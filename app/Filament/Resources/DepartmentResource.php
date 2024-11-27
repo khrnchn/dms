@@ -93,7 +93,9 @@ class DepartmentResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->wrap()
-                    ->description(fn(Department $record): string => $record->description),
+                    ->description(fn(Department $record): string => $record->description ?? ''),
+
+                //  todo: make first letter uppercase
                 TextColumn::make('fileAdmin.name')
                     ->sortable()
                     ->searchable(),

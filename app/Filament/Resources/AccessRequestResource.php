@@ -32,14 +32,7 @@ class AccessRequestResource extends Resource
     {
         return $table
             ->recordUrl(null)
-            ->query(function () {
-                $user = auth()->user();
-                return AccessRequest::query()
-                    ->whereHas('document', function ($query) use ($user) {
-                        $query->where('department_id', $user->department_id);
-                    })
-                    ->orWhere('user_id', $user->id);
-            })
+            ->query(fn() => AccessRequest::forCurrentUser())
             ->columns([
                 TextColumn::make('document.title')->label('Document'),
                 TextColumn::make('user.name')->label('Requested By'),
@@ -53,38 +46,34 @@ class AccessRequestResource extends Resource
                 TextColumn::make('created_at')->label('Requested At')->dateTime()
             ])
             ->actions([
+                // approve
                 Action::make('approve')
                     ->label('Approve')
                     ->color('success')
-                    ->visible(
-                        fn($record) =>
-                        $record->status === 'pending' &&
-                            $record->document->department_id === auth()->user()->department_id &&
-                            auth()->user()->role === Role::MANAGER
-                    )
-                    ->action(function ($record) {
+                    ->action(function (AccessRequest $record) {
                         $record->update([
                             'status' => 'approved',
                             'approved_by' => auth()->id(),
-                            'approved_at' => now()
+                            'approved_at' => now(),
                         ]);
-
+                    
                         Notification::make()
                             ->title('Access Request Approved')
                             ->body('Document access has been granted.')
                             ->success()
                             ->send();
-                    }),
-                Action::make('reject')
-                    ->label('Reject')
-                    ->color('danger')
+                    })
                     ->visible(
                         fn($record) =>
                         $record->status === 'pending' &&
-                            $record->document->department_id === auth()->user()->department_id &&
                             auth()->user()->role === Role::MANAGER
-                    )
-                    ->action(function ($record) {
+                    ),
+
+                // reject
+                Action::make('reject')
+                    ->label('Reject')
+                    ->color('danger')
+                    ->action(function (AccessRequest $record) {
                         $record->update([
                             'status' => 'rejected',
                         ]);
@@ -95,6 +84,12 @@ class AccessRequestResource extends Resource
                             ->danger()
                             ->send();
                     })
+                    ->visible(
+                        fn($record) =>
+                        $record->status === 'pending' &&
+                            $record->document->department_id === auth()->user()->department_id &&
+                            auth()->user()->role === Role::MANAGER
+                    ),
             ]);
     }
 

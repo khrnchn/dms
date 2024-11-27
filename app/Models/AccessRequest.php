@@ -17,6 +17,16 @@ class AccessRequest extends Model
         'expiry_date'
     ];
 
+    public function scopeForCurrentUser($query)
+    {
+        $user = auth()->user();
+
+        return $query->whereHas('document', function ($query) use ($user) {
+            $query->where('department_id', $user->department_id);
+        })
+            ->orWhere('user_id', $user->id);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
