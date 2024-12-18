@@ -38,6 +38,11 @@ class DocumentResource extends Resource
         return static::getModel()::count();
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery();
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -146,6 +151,8 @@ class DocumentResource extends Resource
                             ->hidden(fn($get) => !$get('is_archived'))
                             ->disabled()
                             ->displayFormat('d/m/Y H:i'),
+
+
                     ])
                     ->columns(3)
             ]);
@@ -178,6 +185,7 @@ class DocumentResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('department.name')
+                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
@@ -204,6 +212,26 @@ class DocumentResource extends Resource
                     ->label('Upload date')
                     ->dateTime('d F Y')
                     ->sortable(),
+
+                TextColumn::make('accessRequests.expiry_date')
+                    ->label('Access Expiry')
+                    ->dateTime('d F Y')
+                    ->color('danger')
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) {
+                            return 'N/A';
+                        }
+
+                        $expiryDate = \Carbon\Carbon::parse($state);
+
+                        if ($expiryDate->isPast()) {
+                            return $expiryDate->format('d F Y') . ' (Expired)';
+                        }
+
+                        return $expiryDate->format('d F Y');
+                    })
+                    ->toggleable()
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -268,7 +296,6 @@ class DocumentResource extends Resource
                             'user_id' => auth()->id(),
                             'status' => 'pending',
                             'requested_at' => now(),
-                            'expiry_date' => now()->addDays(30)
                         ]);
 
                         Notification::make()
@@ -296,6 +323,7 @@ class DocumentResource extends Resource
                             AccessRequest::where('document_id', $record->id)
                             ->where('user_id', auth()->id())
                             ->where('status', 'approved')
+                            ->where('expiry_date', '>', now())
                             ->exists() &&
                             Storage::disk('public')->exists($record->file_path)
                     ),

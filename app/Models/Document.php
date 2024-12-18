@@ -31,6 +31,19 @@ class Document extends Model
         });
     }
 
+    public function scopeWithApprovedAccessForUser($query)
+    {
+        $userId = auth()->id();
+
+        return $query->whereHas('accessRequests', function ($query) use ($userId) {
+            $query->where('user_id', $userId)
+                ->where('status', 'approved')
+                ->where(function ($query) {
+                    $query->where('expiry_date', '>', now()); 
+                });
+        });
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);
@@ -49,5 +62,10 @@ class Document extends Model
     public function verifications()
     {
         return $this->hasMany(DocumentVerification::class);
+    }
+
+    public function accessRequests()
+    {
+        return $this->hasMany(AccessRequest::class);
     }
 }

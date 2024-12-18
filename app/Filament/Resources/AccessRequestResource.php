@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Role;
 use App\Filament\Resources\AccessRequestResource\Pages;
 use App\Models\AccessRequest;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -40,26 +41,64 @@ class AccessRequestResource extends Resource
                     ->badge()
                     ->color(fn($state) => match ($state) {
                         'pending' => 'warning',
+                        'pending_file_admin' => 'warning',
                         'approved' => 'success',
                         'rejected' => 'danger'
+                    })
+                    ->formatStateUsing(fn($state) => match ($state) {
+                        'pending' => 'Pending',
+                        'pending_file_admin' => 'Pending File Admin',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                        default => ucfirst($state), // Fallback for any other states
                     }),
-                TextColumn::make('created_at')->label('Requested At')->dateTime()
+                TextColumn::make('created_at')->label('Requested At')->dateTime(),
+                TextColumn::make('expiry_date')
+                    ->label('Expiry Date')
+                    ->dateTime('d F Y')
+                    ->color('danger')
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) {
+                            return 'N/A';
+                        }
+
+                        $expiryDate = \Carbon\Carbon::parse($state);
+
+                        if ($expiryDate->isPast()) {
+                            return $expiryDate->format('d F Y') . ' (Expired)';
+                        }
+
+                        return $expiryDate->format('d F Y');
+                    })
             ])
             ->actions([
                 // approve
                 Action::make('approve')
-                    ->label('Approve')
+                    ->label('Manager Approve')
                     ->color('success')
-                    ->action(function (AccessRequest $record) {
+                    ->modalHeading('Approve Access Request')
+                    ->modalWidth('md')
+                    ->form([
+                        DatePicker::make('expiry_date')
+                            ->label('Expiry Date')
+                            ->required()
+                            ->minDate(now())
+                            ->placeholder('Select expiry date')
+                            ->native(false)
+                    ])
+                    ->action(function (AccessRequest $record, array $data) {
                         $record->update([
-                            'status' => 'approved',
+                            'manager_approval_status' => 'approved',
                             'approved_by' => auth()->id(),
                             'approved_at' => now(),
+                            'expiry_date' => $data['expiry_date'],
+                            'status' => 'pending_file_admin' // new intermediate status
                         ]);
-                    
+
                         Notification::make()
-                            ->title('Access Request Approved')
-                            ->body('Document access has been granted.')
+                            ->title('Access Request Pending File Admin Approval')
+                            ->body("Document access request requires file admin approval.")
                             ->success()
                             ->send();
                     })
@@ -67,6 +106,27 @@ class AccessRequestResource extends Resource
                         fn($record) =>
                         $record->status === 'pending' &&
                             auth()->user()->role === Role::MANAGER
+                    ),
+
+                Action::make('file_admin_approve')
+                    ->label('File Admin Approve')
+                    ->color('success')
+                    ->action(function (AccessRequest $record) {
+                        $record->update([
+                            'file_admin_approval_status' => 'approved',
+                            'status' => 'approved' // final approved status
+                        ]);
+
+                        Notification::make()
+                            ->title('Access Request Fully Approved')
+                            ->body("Document access has been granted.")
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(
+                        fn($record) =>
+                        $record->status === 'pending_file_admin' &&
+                            auth()->user()->role === Role::FILE_ADMIN
                     ),
 
                 // reject

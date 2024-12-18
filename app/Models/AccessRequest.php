@@ -9,12 +9,16 @@ class AccessRequest extends Model
     protected $fillable = [
         'user_id',
         'document_id',
-        'status', // enum: pending, approved, rejected
+        'status',
         'requested_at',
         'approved_by',
         'approved_at',
         'reason',
-        'expiry_date'
+        'expiry_date',
+        'manager_approved_by',
+        'manager_approved_at',
+        'file_admin_approved_by',
+        'file_admin_approved_at'
     ];
 
     public function scopeForCurrentUser($query)
